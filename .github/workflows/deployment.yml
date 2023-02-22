@@ -1,0 +1,59 @@
+name: Deploy to DigitalOcean Droplet
+
+on:
+  push:
+    branches:
+      - main
+  issue_comment:
+    types: [created]
+    # Only trigger on comments on pull requests
+    # Adjust the regex to match your pull request naming convention
+    pattern: >
+      (?i)^approved.*\(#[0-9]+\)?
+    # Only trigger if the comment author is not the actor
+    # This prevents self-approvals
+    author_association: [COLLABORATOR, OWNER]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        environment: [staging, production]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up SSH key
+      uses: webfactory/ssh-agent@v0.5.0
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Run tests
+      run: npm test
+
+    - name: Build and push with Docker
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        push: true
+        tags: myapp:${{ matrix.environment }}
+        file: Dockerfile.${{ matrix.environment }}
+
+    - name: Deploy to DigitalOcean Droplet
+      if: matrix.environment == 'staging' || github.event.comment.body == 'approved'
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.DROPLET_HOST_${{ matrix.environment | upper }} }}
+        username: ${{ secrets.DROPLET_USERNAME }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          docker stop myapp || true
+          docker rm myapp || true
+          docker pull myapp:${{ matrix.environment }}
+          docker run -d --name myapp -p 80:3000 myapp:${{ matrix.environment }}
