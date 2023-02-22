@@ -49,7 +49,7 @@ jobs:
       if: matrix.environment == 'staging' || github.event.comment.body == 'approved'
       uses: appleboy/ssh-action@master
       with:
-        host: ${{ secrets.DROPLET_HOST_${{ matrix.environment | upper }} }}
+        host: ${{ secrets['DROPLET_HOST_' + matrix.environment | upper] }}
         username: ${{ secrets.DROPLET_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
