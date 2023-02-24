@@ -4,15 +4,6 @@ on:
   push:
     branches:
       - main
-  issue_comment:
-    types: [created]
-    # Only trigger on comments on pull requests
-    # Adjust the regex to match your pull request naming convention
-    pattern: >
-      (?i)^approved.*\(#[0-9]+\)?
-    # Only trigger if the comment author is not the actor
-    # This prevents self-approvals
-    author_association: [COLLABORATOR, OWNER]
 
 jobs:
   deploy:
@@ -46,10 +37,9 @@ jobs:
         file: Dockerfile.${{ matrix.environment }}
 
     - name: Deploy to DigitalOcean Droplet
-      if: matrix.environment == 'staging' || github.event.comment.body == 'approved'
       uses: appleboy/ssh-action@master
       with:
-        host: ${{ secrets['DROPLET_HOST_' + matrix.environment | upper] }}
+        host: ${{ secrets.DROPLET_HOST_${{ matrix.environment | upper }} }}
         username: ${{ secrets.DROPLET_USERNAME }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
