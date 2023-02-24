@@ -51,15 +51,15 @@ jobs:
           tags: benhalverson/app:latest
           file: Dockerfile.staging
 
-    # - name: Deploy to DigitalOcean Droplet
-    #   uses: appleboy/ssh-action@master
-    #   with:
-    #     # host: ${{ secrets.DROPLET_HOST_${{ matrix.environment | upper }} }}
-    #     host: bayareafilms.org
-    #     username: ${{ secrets.DROPLET_USERNAME }}
-    #     key: ${{ secrets.SSH_PRIVATE_KEY }}
-    #     script: |
-    #       docker stop myapp || true
-    #       docker rm myapp || true
-    #       docker pull myapp:${{ matrix.environment }}
-    #       docker run -d --name myapp -p 80:3000 myapp:${{ matrix.environment }}
+      - name: Deploy to DigitalOcean Droplet
+        uses: appleboy/ssh-action@master
+        with:
+          # host: ${{ secrets.DROPLET_HOST_${{ matrix.environment | upper }} }}
+          host: bayareafilms.org
+          username: ${{ secrets.DROPLET_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            docker stop myapp || true
+            docker rm myapp || true
+            docker pull myapp:${{ matrix.environment }}
+            docker run -d --name myapp -p 80:3000 myapp:${{ matrix.environment }}
